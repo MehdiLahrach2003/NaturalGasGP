@@ -79,6 +79,7 @@ def generate_synthetic_data(
             "is_observed": is_observed,
             "forward_observed": forward_observed,
         }
+        
     )
 
     return df
