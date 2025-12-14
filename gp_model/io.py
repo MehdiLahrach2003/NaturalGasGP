@@ -3,11 +3,12 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Any, Dict
 import json
 import platform
 import sys
 import hashlib
-
+import yaml 
 
 @dataclass(frozen=True)
 class RunMetadata:
@@ -50,3 +51,15 @@ def write_metadata(path: Path, run_id: str, git_hint: str | None = None) -> None
         git_hint=git_hint,
     )
     write_json(path, asdict(meta))
+    
+    
+def load_yaml(path: str | Path) -> Dict[str, Any]:
+    """
+    Load a YAML config file and return a dict.
+    """
+    p = Path(path)
+    if not p.exists():
+        raise FileNotFoundError(f"Config not found: {p}")
+
+    with p.open("r", encoding="utf-8") as f:
+        return yaml.safe_load(f) or {}

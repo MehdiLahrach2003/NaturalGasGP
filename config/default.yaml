@@ -1,27 +1,28 @@
-project:
-  seed: 42
+# Global defaults for NaturalGasGP experiments
 
-paths:
+data:
   synthetic_csv: "data/synthetic/synthetic_forward_curve.csv"
-  reports_root: "reports/synthetic_results"
 
-synthetic_curve:
-  ttm_min_years: 0.10
-  ttm_max_years: 3.00
-  n_grid: 30
-  n_observed: 12
-  noise_std: 0.05
+reports:
+  synthetic_dir: "reports/synthetic_results"
 
 gp:
-  alpha: 1.0e-6          # Observation noise added to the diagonal (numerical stability)
-  normalize_y: true
+  # Noise level added on top of the kernel (observation noise)
+  alpha: 1.0e-4
 
-kernels:
+  # Kernel settings (used by experiments)
   rbf:
-    length_scale: 0.50
-    length_scale_bounds: [0.05, 5.0]
+    length_scale: 0.6
+
   periodic:
+    length_scale: 0.8
     period_years: 1.0
-    period_bounds: [0.5, 2.0]
-    length_scale: 0.50
-    length_scale_bounds: [0.05, 5.0]
+
+  # GP fit options
+  normalize_y: true
+  n_restarts_optimizer: 3
+
+grid:
+  ttm_min: 0.10
+  ttm_max: 3.00
+  n_points: 250
