@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "naturalgasgp"
+version = "0.1.0"
+description = "Natural Gas forward curve reconstruction using Gaussian Processes"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "numpy",
+  "pandas",
+  "matplotlib",
+  "scikit-learn",
+  "pyyaml",
+]
+
+[tool.setuptools]
+packages = ["gp_model", "naturalgasgp"]
