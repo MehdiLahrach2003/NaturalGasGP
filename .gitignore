@@ -3,10 +3,18 @@
 
 # Python cache
 __pycache__/
-*.pyc
+*.py[cod]
+
+# Pytest cache
+.pytest_cache/
+
+# Build / packaging artifacts
+*.egg-info/
+dist/
+build/
 
 # macOS
 .DS_Store
 
-# Generated report assets (auto)
+# Generated report assets (timestamped folders)
 reports/**/synthetic_assets_*/
