@@ -1,0 +1,27 @@
+project:
+  seed: 42
+
+paths:
+  synthetic_csv: "data/synthetic/synthetic_forward_curve.csv"
+  reports_root: "reports/synthetic_results"
+
+synthetic_curve:
+  ttm_min_years: 0.10
+  ttm_max_years: 3.00
+  n_grid: 30
+  n_observed: 12
+  noise_std: 0.05
+
+gp:
+  alpha: 1.0e-6          # Observation noise added to the diagonal (numerical stability)
+  normalize_y: true
+
+kernels:
+  rbf:
+    length_scale: 0.50
+    length_scale_bounds: [0.05, 5.0]
+  periodic:
+    period_years: 1.0
+    period_bounds: [0.5, 2.0]
+    length_scale: 0.50
+    length_scale_bounds: [0.05, 5.0]
