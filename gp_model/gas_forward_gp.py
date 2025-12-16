@@ -1,8 +1,9 @@
+from __future__ import annotations
+
 from dataclasses import dataclass, field
-import numpy as np
-from dataclasses import dataclass
 from typing import Optional, Literal
 
+import numpy as np
 from sklearn.gaussian_process import GaussianProcessRegressor
 
 from gp_model.kernels import (
@@ -22,9 +23,10 @@ class GasForwardGPConfig:
     GP config.
 
     kernel_type:
-      - "rbf"         : Step 2 model (RBF + noise)
-      - "rbf_periodic": Step 3 model (RBF + periodic + noise)
+      - "rbf"         : RBF + WhiteKernel (noise)
+      - "rbf_periodic": RBF + periodic + WhiteKernel (noise)
     """
+
     kernel_type: KernelType = "rbf"
 
     # GP settings
@@ -32,11 +34,14 @@ class GasForwardGPConfig:
     normalize_y: bool = True
     random_state: int = 42
 
+    # Numerical stability term (added to diagonal of K).
+    # Even if noise is modeled by WhiteKernel, keeping a tiny alpha helps stability.
+    alpha: float = 1e-8
+
     # Kernel params (USE default_factory!)
     rbf_params: RBFKernelParams = field(default_factory=RBFKernelParams)
     periodic_params: PeriodicKernelParams = field(default_factory=PeriodicKernelParams)
     noise_params: NoiseKernelParams = field(default_factory=NoiseKernelParams)
-
 
 
 class GasForwardGP:
@@ -58,7 +63,7 @@ class GasForwardGP:
 
         self.gp = GaussianProcessRegressor(
             kernel=kernel,
-            alpha=0.0,  # noise handled by WhiteKernel
+            alpha=float(self.config.alpha),
             n_restarts_optimizer=self.config.n_restarts_optimizer,
             normalize_y=self.config.normalize_y,
             random_state=self.config.random_state,
