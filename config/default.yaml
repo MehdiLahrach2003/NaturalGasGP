@@ -16,7 +16,7 @@ gp:
 
   periodic:
     length_scale: 0.8
-    period_years: 1.0
+    periodicity: 1.0
 
   # GP fit options
   normalize_y: true
