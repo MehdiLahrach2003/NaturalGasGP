@@ -7,10 +7,10 @@ reports:
   synthetic_dir: "reports/synthetic_results"
 
 gp:
-  # Noise level added on top of the kernel (observation noise)
-  alpha: 1.0e-4
+  # Which GP model to use
+  kernel_type: "rbf_periodic"
 
-  # Kernel settings (used by experiments)
+  # Kernel settings
   rbf:
     length_scale: 0.6
 
