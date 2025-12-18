@@ -1,65 +1,88 @@
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
-from datetime import datetime, timezone
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict
-import json
-import platform
-import sys
-import hashlib
-import yaml 
+from typing import Any, Mapping
+
+import numpy as np
+import pandas as pd
+import yaml
+
+
+# ---------------------------
+# YAML
+# ---------------------------
+
+def load_yaml(path: str | Path) -> dict[str, Any]:
+    path = Path(path)
+    with path.open("r", encoding="utf-8") as f:
+        data = yaml.safe_load(f) or {}
+    if not isinstance(data, dict):
+        raise ValueError(f"YAML root must be a mapping, got {type(data)}")
+    return data
+
+
+# ---------------------------
+# Curve CSV loading
+# ---------------------------
 
 @dataclass(frozen=True)
-class RunMetadata:
-    """Minimal run metadata for reproducibility."""
-    run_id: str
-    created_utc: str
-    python_version: str
-    platform: str
-    command: str
-    git_hint: str | None = None  # optional: user can fill later
+class CurveData:
+    ttm_years: np.ndarray
+    y: np.ndarray
+    df: pd.DataFrame  # cleaned df (useful for debug)
 
 
-def make_run_id(prefix: str = "run") -> str:
-    # Short, readable, collision-resistant enough for local experiments
-    ts = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
-    return f"{prefix}_{ts}"
+def _coerce_float_series(s: pd.Series) -> pd.Series:
+    # Handles commas, strings, etc.
+    return pd.to_numeric(s.astype(str).str.replace(",", ".", regex=False), errors="coerce")
 
 
-def compute_file_sha256(path: Path) -> str:
-    h = hashlib.sha256()
-    with open(path, "rb") as f:
-        for chunk in iter(lambda: f.read(8192), b""):
-            h.update(chunk)
-    return h.hexdigest()
+def load_curve_csv(
+    csv_path: str | Path,
+    ttm_col: str,
+    y_col: str,
+    dropna: bool = True,
+) -> CurveData:
+    csv_path = Path(csv_path)
+    if not csv_path.exists():
+        raise FileNotFoundError(f"CSV not found: {csv_path}")
+
+    df = pd.read_csv(csv_path)
+
+    if ttm_col not in df.columns:
+        raise KeyError(f"Missing column '{ttm_col}' in {csv_path}. Columns: {list(df.columns)}")
+    if y_col not in df.columns:
+        raise KeyError(f"Missing column '{y_col}' in {csv_path}. Columns: {list(df.columns)}")
+
+    df = df.copy()
+    df[ttm_col] = _coerce_float_series(df[ttm_col])
+    df[y_col] = _coerce_float_series(df[y_col])
+
+    if dropna:
+        df = df.dropna(subset=[ttm_col, y_col]).reset_index(drop=True)
+
+    ttm = df[ttm_col].to_numpy(dtype=float)
+    y = df[y_col].to_numpy(dtype=float)
+
+    if len(ttm) == 0:
+        raise ValueError(f"No usable rows after cleaning (all NaN?) for {csv_path}")
+
+    return CurveData(ttm_years=ttm, y=y, df=df)
 
 
-def write_json(path: Path, payload: dict) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(payload, f, indent=2, ensure_ascii=False)
+def load_synthetic_curve(
+    csv_path: str | Path,
+    ttm_col: str = "ttm_years",
+    y_col: str = "forward_observed",
+) -> CurveData:
+    return load_curve_csv(csv_path, ttm_col=ttm_col, y_col=y_col, dropna=True)
 
 
-def write_metadata(path: Path, run_id: str, git_hint: str | None = None) -> None:
-    meta = RunMetadata(
-        run_id=run_id,
-        created_utc=datetime.now(timezone.utc).isoformat(),
-        python_version=sys.version.replace("\n", " "),
-        platform=f"{platform.system()} {platform.release()} ({platform.machine()})",
-        command=" ".join(sys.argv),
-        git_hint=git_hint,
-    )
-    write_json(path, asdict(meta))
-    
-    
-def load_yaml(path: str | Path) -> Dict[str, Any]:
-    """
-    Load a YAML config file and return a dict.
-    """
-    p = Path(path)
-    if not p.exists():
-        raise FileNotFoundError(f"Config not found: {p}")
-
-    with p.open("r", encoding="utf-8") as f:
-        return yaml.safe_load(f) or {}
+def load_henry_hub_curve(
+    csv_path: str | Path,
+    ttm_col: str,
+    y_col: str,
+) -> CurveData:
+    # For real data we *always* drop NaNs (scikit-learn GP refuses NaNs)
+    return load_curve_csv(csv_path, ttm_col=ttm_col, y_col=y_col, dropna=True)
