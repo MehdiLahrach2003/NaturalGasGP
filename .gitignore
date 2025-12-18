@@ -18,3 +18,6 @@ build/
 
 # Generated report assets (timestamped folders)
 reports/**/synthetic_assets_*/
+
+# Henry Hub real data (local only)
+data/henry_hub/*.csv

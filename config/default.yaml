@@ -26,3 +26,8 @@ grid:
   ttm_min: 0.10
   ttm_max: 3.00
   n_points: 250
+
+data:
+  synthetic_csv: "data/synthetic/synthetic_forward_curve.csv"
+  henry_hub_csv: "data/henry_hub/henry_hub.csv"
+
