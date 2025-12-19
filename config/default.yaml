@@ -2,13 +2,18 @@
 
 data:
   synthetic_csv: "data/synthetic/synthetic_forward_curve.csv"
+  henry_hub_csv: "data/henry_hub/henry_hub.csv"
 
 reports:
   synthetic_dir: "reports/synthetic_results"
+  henry_hub_dir: "reports/henry_hub_results"
 
 gp:
   # Which GP model to use
   kernel_type: "rbf_periodic"
+
+  # Observation noise (used inside WhiteKernel)
+  alpha: 1.0e-4
 
   # Kernel settings
   rbf:
@@ -16,18 +21,17 @@ gp:
 
   periodic:
     length_scale: 0.8
-    periodicity: 1.0
+    period: 1.0
 
   # GP fit options
   normalize_y: true
   n_restarts_optimizer: 3
+  random_state: 42
 
 grid:
   ttm_min: 0.10
   ttm_max: 3.00
   n_points: 250
 
-data:
-  synthetic_csv: "data/synthetic/synthetic_forward_curve.csv"
-  henry_hub_csv: "data/henry_hub/henry_hub.csv"
-
+henry_hub:
+  split_years: 2.0
