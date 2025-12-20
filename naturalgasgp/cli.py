@@ -6,57 +6,40 @@ import sys
 from pathlib import Path
 
 
-def _project_root() -> Path:
-    # naturalgasgp/cli.py -> project root is parent of "naturalgasgp"
-    return Path(__file__).resolve().parents[1]
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 
-def _run_script(rel_path: str) -> int:
-    """
-    Run a Python script located in the repo using the current interpreter.
-    This ensures the venv / editable install environment is used.
-    """
-    root = _project_root()
-    script_path = root / rel_path
+def run_assets() -> None:
+    script = PROJECT_ROOT / "experiments" / "make_report_assets.py"
+    if not script.exists():
+        raise FileNotFoundError(f"Missing assets script: {script}")
 
-    if not script_path.exists():
-        print(f"[ERROR] Script not found: {script_path}")
-        return 1
-
-    cmd = [sys.executable, str(script_path)]
-    print(f"[INFO] Running: {' '.join(cmd)}")
-    return subprocess.call(cmd, cwd=str(root))
+    cmd = [sys.executable, str(script)]
+    print(f"[CLI] Running assets pipeline:\n  {' '.join(cmd)}")
+    subprocess.run(cmd, cwd=str(PROJECT_ROOT), check=True)
 
 
-def build_parser() -> argparse.ArgumentParser:
-    p = argparse.ArgumentParser(
+def main() -> None:
+    parser = argparse.ArgumentParser(
         prog="naturalgasgp",
-        description="Natural Gas Forward Curve modeling with Gaussian Processes",
+        description="NaturalGasGP – Gaussian Process pipeline for gas forwards",
     )
-    sub = p.add_subparsers(dest="command", required=True)
 
-    sub.add_parser("synthetic", help="Generate synthetic forward curve dataset")
-    sub.add_parser("rbf", help="Fit GP with RBF kernel on synthetic dataset")
-    sub.add_parser("seasonality", help="Fit GP with RBF + Periodic kernel on synthetic dataset")
-    sub.add_parser("compare", help="Compare RBF vs seasonal GP on synthetic dataset")
-    sub.add_parser("assets", help="Generate a full set of report assets (plots/metrics)")
+    sub = parser.add_subparsers(dest="command", required=True)
 
-    return p
+    # ---- assets ----
+    sub.add_parser(
+        "assets",
+        help="Run full pipeline and regenerate all figures/CSVs",
+    )
 
+    args = parser.parse_args()
 
-def main(argv: list[str] | None = None) -> int:
-    args = build_parser().parse_args(argv)
-
-    mapping = {
-        "synthetic": "experiments/generate_synthetic_curve.py",
-        "rbf": "experiments/run_gp_rbf.py",
-        "seasonality": "experiments/run_gp_seasonality.py",
-        "compare": "experiments/compare_gp_models.py",
-        "assets": "experiments/make_report_assets.py",
-    }
-
-    return _run_script(mapping[args.command])
+    if args.command == "assets":
+        run_assets()
+    else:
+        raise RuntimeError(f"Unknown command: {args.command}")
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    main()

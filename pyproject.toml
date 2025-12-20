@@ -16,5 +16,8 @@ dependencies = [
   "pyyaml",
 ]
 
+[project.scripts]
+naturalgasgp = "naturalgasgp.cli:main"
+
 [tool.setuptools]
 packages = ["gp_model", "naturalgasgp"]
