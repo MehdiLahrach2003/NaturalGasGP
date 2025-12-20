@@ -9,11 +9,8 @@ reports:
   henry_hub_dir: "reports/henry_hub_results"
 
 gp:
-  # Which GP model to use
+  # Which GP model to use by default
   kernel_type: "rbf_periodic"
-
-  # Observation noise (used inside WhiteKernel)
-  alpha: 1.0e-4
 
   # Kernel settings
   rbf:
@@ -26,12 +23,8 @@ gp:
   # GP fit options
   normalize_y: true
   n_restarts_optimizer: 3
-  random_state: 42
 
 grid:
   ttm_min: 0.10
   ttm_max: 3.00
   n_points: 250
-
-henry_hub:
-  split_years: 2.0
